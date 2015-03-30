@@ -1,0 +1,51 @@
+BXBY = rand
+HXHY = *HEAD
+TXTY = *TAIL
+
+loop:
+	read DIRECTION
+	HEAD++
+	HXHY += DIRECTION
+	[HEAD] = HXHY
+	BXBY <> HXHY ? JMP cltail
+	BXBY = rand
+	[BY] = OR([BY]; 9-2^BX)
+	JMP svtail
+cltail:
+	[TY] = AND([TY]; XOR(FFFF; (9-2^TX)))
+	TAIL++
+	TXTY = [TAIL]
+svtail:
+	[HY] = OR([HY]; 9-2^HX)
+
+	JMP loop
+
+======================================
+
+ax = BXBYHHTT
+cx = R|L|U|D
+bx = HXHYTXTY
+
+loop:
+	cx = IF(AND(key_up=1; rcx <> "D"); "U"; IF(AND(key_down=1; rcx <> "U"); "D";IF(AND(key_left=1; rcx <> "R"); "L";IF(AND(key_right=1; rcx <> "R"); "R";rcx))))
+	ax = IF(ROUND(MOD(rax;10000)/100) < 89; ROUND(MOD(rax;10000)/100)+1; 20) * 100 + MOD(rax;100) + ROUND(rax/10000) * 10000
+	bx = IF(AND(rcx="U";MOD(ROUND(rbx/10000);100)>0);rbx-10000;IF(AND(rcx="D";MOD(ROUND(rbx/10000);100)<19);rbx+10000;IF(AND(rcx="R";ROUND(rbx/1000000)<9);rbx+1000000;IF(AND(rcx="L";ROUND(rbx/1000000)>0);rbx-1000000;"FAIL"))))
+	push cx
+	[ROUND(MOD(rax; 10000)/100)] = ROUND(rbx/10000)
+	jmp IF(ROUND(rax/10000) <> ROUND(rbx/10000); ctail; next)
+	ax = MOD(rax;10000) + MOD(MOD(ROUND(rax/10000);100)*11 + 3; 20) * 10000 + MOD(ROUND(rax/1000000)*3+2;10)*1000000 // ball generator
+	cx = [MOD(ROUND(rax/10000);100)] // get [BY]
+	[MOD(ROUND(rax/10000);100)] = BITOR(rcx; 2^(9-ROUND(rax/1000000))) // draw ball on scr
+	jmp svtail
+ctail:
+	cx = [MOD(rbx;100)] // cx = [TY]
+	[MOD(rbx;100)] = BITAND(rcx; BITXOR(HEX2DEC("FFFF"); 2^(9-ROUND(MOD(rbx;10000)/100)))) // clear tail on scr
+	ax = IF(MOD(rax;100) < 89; rax + 1; ROUND(rax/100)*100 + 20)
+	cx = [MOD(rax;100)] // cx = [TT]
+	bx = ROUND(rbx/10000)*10000 + rcx
+svtail:
+	cx = [MOD(ROUND(rbx/10000);100)] // cx = [HY]
+	[MOD(ROUND(rbx/10000);100)] = BITOR(rcx; 2^(9-ROUND(rbx/1000000))) // draw head on scr
+	pop cx
+	jmp loop
+
